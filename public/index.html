@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alexa+ Study Coach — live MCP demo</title>
+<style>
+:root{--bg:#070b14;--panel:#0e1526;--panel2:#131c33;--line:#1f2b4a;--txt:#e6ecff;--mut:#8b98c0;--cy:#00caff;--bl:#2a6bff;--ok:#30d98b;--warn:#ffc247;--bad:#ff5d73}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#12204a 0,#070b14 60%);color:var(--txt);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif;min-height:100vh}
+header{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:17px;margin:0;font-weight:650}
+.tag{font-size:11px;color:var(--cy);border:1px solid #0b4a66;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.tag.live{color:#06231a;background:var(--ok);border-color:var(--ok);font-weight:650}
+.tag.claude{color:#2a1b00;background:var(--warn);border-color:var(--warn);font-weight:650}
+header .sp{flex:1}
+select,button,input{font:inherit;color:var(--txt)}
+select{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+main{display:grid;grid-template-columns:minmax(340px,480px) 1fr;gap:16px;padding:16px 20px;max-width:1400px;margin:auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.device{display:flex;align-items:center;gap:16px;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#101a33,#0e1526)}
+.echo{width:74px;height:74px;border-radius:50%;position:relative;flex:none;background:#05080f;box-shadow:inset 0 0 18px #000,0 0 0 2px #1a2442}
+.ring{position:absolute;inset:6px;border-radius:50%;transition:.3s}
+.echo::after{content:"";position:absolute;inset:16px;border-radius:50%;background:#070c18}
+.echo.idle .ring{background:#0a2a44;box-shadow:0 0 6px #00caff33}
+.echo.listening .ring{background:conic-gradient(var(--cy),var(--bl),var(--cy));animation:spin 1.1s linear infinite;box-shadow:0 0 22px #00caffaa}
+.echo.thinking .ring{background:conic-gradient(var(--cy) 0 25%,transparent 25% 100%);animation:spin .8s linear infinite;box-shadow:0 0 12px #00caff88}
+.echo.speaking .ring{background:conic-gradient(var(--cy),#7be3ff,var(--bl),var(--cy));animation:pulse .7s ease-in-out infinite alternate;box-shadow:0 0 26px #00caffcc}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{from{filter:brightness(.7)}to{filter:brightness(1.4)}}
+.devinfo b{font-size:15px}.devinfo div{color:var(--mut);font-size:12px}
+.homes{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.dv{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:3px 9px;font-size:12px;color:var(--mut)}
+.dv.on{color:#06222c;background:var(--cy);border-color:var(--cy);font-weight:600}
+#chat{height:380px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:9px 12px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word}
+.me{align-self:flex-end;background:var(--bl);border-bottom-right-radius:4px}
+.al{align-self:flex-start;background:var(--panel2);border:1px solid var(--line);border-bottom-left-radius:4px}
+.al small{display:block;color:var(--cy);font-size:11px;margin-bottom:3px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px}
+.chip{background:transparent;border:1px solid var(--line);color:var(--mut);padding:4px 10px;border-radius:99px;cursor:pointer;font-size:12px}
+.chip:hover{color:var(--cy);border-color:var(--cy)}
+.inp{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:#0b1222}
+.inp input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none}
+.inp input:focus{border-color:var(--cy)}
+.btn{background:var(--cy);color:#04202b;border:0;border-radius:12px;padding:0 16px;font-weight:650;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:wait}
+.mic{width:44px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:12px;cursor:pointer;font-size:18px}
+.mic.rec{background:var(--bad);border-color:var(--bad)}
+.tabs{display:flex;border-bottom:1px solid var(--line);overflow:auto}
+.tab{padding:11px 14px;cursor:pointer;color:var(--mut);border:0;background:transparent;white-space:nowrap;border-bottom:2px solid transparent}
+.tab.act{color:var(--cy);border-bottom-color:var(--cy)}
+.pane{display:none;height:560px;overflow:auto;padding:14px}.pane.act{display:block}
+pre{margin:0;white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace}
+.log{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.log .h{padding:5px 10px;font-size:11px;font-weight:650;display:flex;gap:8px;justify-content:space-between}
+.log.in .h{background:#12254f;color:#8fb4ff}.log.out .h{background:#0d3a2c;color:var(--ok)}
+.log pre{padding:8px 10px;background:#080d1a;color:#c8d4ff}
+.hd{color:var(--mut);font-weight:400}
+.tool{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;background:var(--panel2)}
+.tool b{color:var(--cy)}.tool code{color:var(--warn);font-size:12px;word-break:break-all}
+.trace{border-left:2px solid var(--cy);padding:4px 10px;margin:0 0 8px;color:var(--mut);font-size:12.5px;word-break:break-word}
+.trace b{color:var(--txt)}
+h3{margin:14px 0 6px;font-size:13px;color:var(--cy)}
+ul.st{margin:0;padding-left:18px}.st li{margin:2px 0}
+.note{background:#0b2a22;border:1px solid #14543f;color:#9af0cc;border-radius:10px;padding:8px 12px;font-size:12px;margin-bottom:12px}
+code{background:#0a1124;padding:1px 5px;border-radius:5px}
+#toast{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:9}
+.t{background:var(--cy);color:#04202b;padding:10px 14px;border-radius:12px;font-weight:650;box-shadow:0 8px 30px #000a}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔵 Alexa+ Study Coach</h1>
+  <span class="tag live" id="liveTag">MCP LIVE</span>
+  <span class="tag" id="verTag">Streamable HTTP</span>
+  <span class="tag" id="brainTag">brain: …</span>
+  <span class="sp"></span>
+  <label style="color:var(--mut);font-size:12px">भाषा
+    <select id="langSel"><option value="auto">Auto</option><option value="hi">हिन्दी</option><option value="en">English</option></select>
+  </label>
+  <label style="color:var(--mut);font-size:12px">आवाज़
+    <select id="voiceSel"><option value="1">Voice ON</option><option value="0">Voice OFF</option></select>
+  </label>
+</header>
+
+<main>
+  <section class="card">
+    <div class="device">
+      <div class="echo idle" id="echo"><div class="ring"></div></div>
+      <div class="devinfo">
+        <b>Echo • Prakash Study Coach</b>
+        <div id="status">तैयार • टाइप करो या 🎤 दबाकर बोलो</div>
+        <div class="homes" id="homes"></div>
+      </div>
+    </div>
+    <div id="chat"></div>
+    <div class="chips" id="chips"></div>
+    <div class="inp">
+      <button class="mic" id="mic" title="बोलकर पूछो">🎤</button>
+      <input id="q" placeholder="जैसे: 10 मिनट बाद पढ़ाई याद दिलाओ…" autocomplete="off">
+      <button class="btn" id="send">भेजो</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="tabs" id="tabs">
+      <button class="tab act" data-p="traffic">MCP Traffic</button>
+      <button class="tab" data-p="trace">Agent Trace</button>
+      <button class="tab" data-p="tools">Tools</button>
+      <button class="tab" data-p="state">State</button>
+      <button class="tab" data-p="skill">SKILL.md</button>
+      <button class="tab" data-p="connect">Connect</button>
+    </div>
+    <div class="pane act" id="p-traffic"><div class="note">यह असली नेटवर्क ट्रैफ़िक है। ब्राउज़र UI → <code>/api/agent</code> → agent → <b>HTTP POST /mcp</b> (असली JSON-RPC, Mcp-Session-Id के साथ)। नीला = request, हरा = response।</div><div id="logs"></div></div>
+    <div class="pane" id="p-trace"><div id="traces"><div class="trace">अभी कोई कमांड नहीं दी गई।</div></div></div>
+    <div class="pane" id="p-tools"><div id="toolsList">लोड हो रहा है…</div></div>
+    <div class="pane" id="p-state"><div id="stateView"></div></div>
+    <div class="pane" id="p-skill"><pre id="skillMd">लोड हो रहा है…</pre></div>
+    <div class="pane" id="p-connect"><div id="connectView"></div></div>
+  </section>
+</main>
+<div id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+let history=[], lastLang='hi', busy=false, lastLog=0, stateCache=null;
+
+async function api(path,opt){const r=await fetch(path,opt);if(!r.ok)throw new Error(path+' → '+r.status);return r.json();}
+
+/* ---------- chat ---------- */
+function addMsg(who,txt){const d=document.createElement('div');d.className='msg '+who;d.innerHTML=(who==='al'?'<small>Alexa+</small>':'')+esc(txt);$('#chat').appendChild(d);$('#chat').scrollTop=1e9;}
+function setEcho(st,label){const e=$('#echo');e.className='echo '+st;if(label)$('#status').textContent=label;if(st==='idle')$('#status').textContent=lastLang==='hi'?'तैयार • टाइप करो या 🎤 दबाकर बोलो':'Ready • type or press 🎤';}
+function speak(text,L){
+  const done=()=>setTimeout(()=>setEcho('idle'),300);
+  if($('#voiceSel').value!=='1'||!('speechSynthesis' in window)){setTimeout(()=>setEcho('idle'),1400);return;}
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/[•🎉🚀⚛️]/g,' '));u.lang=L==='hi'?'hi-IN':'en-IN';
+    const vs=speechSynthesis.getVoices();const v=vs.find(v=>v.lang.toLowerCase().startsWith(u.lang.toLowerCase()))||vs.find(v=>v.lang.startsWith(L==='hi'?'hi':'en'));if(v)u.voice=v;
+    u.onend=done;u.onerror=done;speechSynthesis.speak(u);}catch(e){done();}
+}
+function toast(t){const d=document.createElement('div');d.className='t';d.textContent=t;$('#toast').appendChild(d);setTimeout(()=>d.remove(),8000);}
+
+async function handle(raw){
+  if(busy)return;busy=true;$('#send').disabled=true;
+  addMsg('me',raw);setEcho('thinking','सोच रही हूँ…');
+  try{
+    const out=await api('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:raw,history:history.slice(-10),lang:$('#langSel').value})});
+    lastLang=out.lang;addMsg('al',out.reply);setEcho('speaking');speak(out.reply,out.lang);
+    history.push({role:'user',content:raw},{role:'assistant',content:out.reply});
+    renderTrace(raw,out);applyState(out.state);
+  }catch(e){addMsg('al','⚠️ '+e.message);setEcho('idle');}
+  busy=false;$('#send').disabled=false;
+}
+function renderTrace(raw,out){
+  const T=$('#traces');if(T.firstElementChild&&T.firstElementChild.textContent.startsWith('अभी कोई'))T.innerHTML='';
+  const d=document.createElement('div');
+  d.innerHTML='<div class="trace"><b>User:</b> '+esc(raw)+'<br><b>Language:</b> '+out.lang+' • <b>Brain:</b> '+out.brain+'<br><b>Reasoning:</b> '+esc(out.why)+'</div>'
+   +out.trace.map(t=>'<div class="trace"><b>tools/call</b> → <code>'+esc(t.tool)+'</code> '+esc(JSON.stringify(t.args))+'<br><b>structuredContent</b> ← '+esc(JSON.stringify(t.structured))+(t.isError?' <b style="color:var(--bad)">(isError)</b>':'')+'</div>').join('');
+  T.prepend(d);
+}
+
+/* ---------- state / devices / reminders ---------- */
+function applyState(s){
+  if(!s)return;stateCache={...(stateCache||{}),...s};
+  const n={light:'💡 Light',fan:'🌀 Fan',ac:'❄️ AC'};
+  $('#homes').innerHTML=Object.keys(s.devices).map(k=>'<span class="dv '+(s.devices[k]?'on':'')+'">'+n[k]+' '+(s.devices[k]?'ON':'OFF')+'</span>').join('');
+  if($('#p-state').classList.contains('act'))renderState();
+}
+function renderState(){
+  const s=stateCache;if(!s)return;
+  $('#stateView').innerHTML='<h3>MCP session</h3><div>Mcp-Session-Id: <code>'+esc(s.session||'-')+'</code><br>Protocol: <code>'+esc(s.protocol||'-')+'</code> • Active sessions: '+(s.sessions??'-')+'</div>'
+   +'<h3>Reminders / timers</h3><ul class="st">'+((s.reminders||[]).map(r=>'<li>'+(r.kind==='focus'?'⏱ Focus timer':'⏰ '+esc(r.text))+' — '+r.secondsLeft+'s बाकी</li>').join('')||'<li>कुछ नहीं</li>')+'</ul>'
+   +'<h3>To-do</h3><ul class="st">'+((s.todos||[]).map(t=>'<li>'+esc(t)+'</li>').join('')||'<li>खाली</li>')+'</ul>'
+   +'<h3>Completed topics</h3><ul class="st">'+((s.topics||[]).map(t=>'<li>'+esc(t.topic)+' <span class="hd">('+new Date(t.at).toLocaleString()+')</span></li>').join('')||'<li>अभी कोई नहीं</li>')+'</ul>'
+   +'<h3>Devices (simulated)</h3><ul class="st">'+Object.entries(s.devices||{}).map(([k,v])=>'<li>'+k+': '+(v?'ON':'OFF')+'</li>').join('')+'</ul>';
+}
+async function pollState(){try{const s=await api('/api/state');applyState(s);
+  $('#brainTag').textContent='brain: '+(s.brain==='claude'?'Claude (API)':'offline rules');$('#brainTag').className='tag'+(s.brain==='claude'?' claude':'');
+  $('#verTag').textContent='MCP '+(s.protocol||'')+' • Streamable HTTP';$('#liveTag').textContent='MCP LIVE';$('#liveTag').style.opacity=1;}
+  catch(e){$('#liveTag').textContent='server offline';$('#liveTag').style.opacity=.6;}}
+async function pollDue(){try{const d=await api('/api/due');for(const r of d.items){toast('🔔 '+r.message);addMsg('al',r.message);setEcho('speaking');speak(r.message,r.lang||lastLang);}}catch(e){}}
+
+/* ---------- live MCP traffic ---------- */
+async function pollLog(){
+  try{const d=await api('/api/log?since='+lastLog);lastLog=d.last||lastLog;const L=$('#logs');
+    for(const e of d.items){
+      const el=document.createElement('div');el.className='log '+e.dir;
+      const hs=Object.entries(e.headers||{}).map(([k,v])=>k+': '+v).join('\n');
+      el.innerHTML='<div class="h"><span>'+(e.dir==='in'?'CLIENT → SERVER  '+esc(e.http):'SERVER → CLIENT  '+esc(e.http))+'</span><span class="hd">'+new Date(e.t).toLocaleTimeString()+'</span></div>';
+      const p=document.createElement('pre');p.textContent=hs+(e.body?(hs?'\n\n':'')+JSON.stringify(e.body,null,2):'');el.appendChild(p);L.prepend(el);}
+    while(L.children.length>60)L.lastChild.remove();}catch(e){}
+}
+
+/* ---------- static tabs ---------- */
+$$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.remove('act'));$$('.pane').forEach(x=>x.classList.remove('act'));b.classList.add('act');$('#p-'+b.dataset.p).classList.add('act');if(b.dataset.p==='state')renderState();});
+async function loadStatic(){
+  try{const d=await api('/api/tools');$('#toolsList').innerHTML='<div class="note">यह सीधे MCP <code>tools/list</code> का जवाब है ('+d.tools.length+' tools)।</div>'+d.tools.map(t=>'<div class="tool"><b>'+esc(t.name)+'</b> <span class="hd">'+esc(t.title||'')+'</span><div>'+esc(t.description)+'</div><code>'+esc(JSON.stringify(t.inputSchema.properties))+'</code></div>').join('');}catch(e){$('#toolsList').textContent='tools लोड नहीं हुए: '+e.message;}
+  try{$('#skillMd').textContent=await (await fetch('/api/skill')).text();}catch(e){}
+  const o=location.origin;
+  $('#connectView').innerHTML='<div class="note">यह server किसी भी MCP client से जुड़ सकता है। Endpoint: <code>'+esc(o)+'/mcp</code></div>'
+   +'<h3>1. MCP Inspector</h3><pre>npx @modelcontextprotocol/inspector\n# Transport: Streamable HTTP\n# URL: '+esc(o)+'/mcp</pre>'
+   +'<h3>2. curl</h3><pre>curl -si '+esc(o)+'/mcp \\\n  -H "Content-Type: application/json" \\\n  -H "Accept: application/json, text/event-stream" \\\n  -d \'{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl","version":"1"}}}\'\n# copy the Mcp-Session-Id response header, then:\ncurl -s '+esc(o)+'/mcp -H "Content-Type: application/json" -H "Accept: application/json" \\\n  -H "Mcp-Session-Id: &lt;id&gt;" -H "MCP-Protocol-Version: 2025-11-25" \\\n  -d \'{"jsonrpc":"2.0","id":2,"method":"tools/list"}\'</pre>'
+   +'<h3>3. Claude Code / other MCP clients</h3><pre>claude mcp add --transport http study-coach '+esc(o)+'/mcp</pre>'
+   +'<h3>4. Real Alexa+</h3><div>Public HTTPS URL चाहिए (जैसे tunnel या cloud deploy), <code>MCP_TOKEN</code> और <code>ALLOWED_ORIGINS</code> सेट करके। विवरण README में।</div>';
+}
+
+/* ---------- input ---------- */
+function send(){const v=$('#q').value.trim();if(!v)return;$('#q').value='';handle(v);}
+$('#send').onclick=send;$('#q').addEventListener('keydown',e=>{if(e.key==='Enter')send();});
+const CHIPS=['10 मिनट बाद पढ़ाई याद दिलाओ','25 minute focus timer','Add DSA practice to my todo list','आज का स्टडी प्लान बताओ','ब्लैक होल के बारे में बताओ','Explain relativity','क्विज़ लो','लाइट चालू करो','Turn on the fan','245 * 18','आज मैंने न्यूटन के नियम पढ़ लिए','मेरा प्रोग्रेस दिखाओ','मेरे रिमाइंडर दिखाओ','Chandrayaan के बारे में बताओ'];
+$('#chips').innerHTML=CHIPS.map(c=>'<button class="chip">'+esc(c)+'</button>').join('');
+$$('.chip').forEach(c=>c.onclick=()=>handle(c.textContent));
+
+let rec=null;
+$('#mic').onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('इस ब्राउज़र में वॉइस इनपुट नहीं है। Chrome/Edge आज़माओ।');return;}
+  if(rec){rec.stop();return;}
+  rec=new SR();rec.lang=$('#langSel').value==='en'?'en-IN':'hi-IN';rec.interimResults=false;
+  rec.onstart=()=>{$('#mic').classList.add('rec');setEcho('listening','सुन रही हूँ…');};
+  rec.onresult=e=>handle(e.results[0][0].transcript);
+  rec.onerror=()=>{};rec.onend=()=>{$('#mic').classList.remove('rec');rec=null;if($('#echo').classList.contains('listening'))setEcho('idle');};
+  rec.start();
+};
+
+/* ---------- boot ---------- */
+addMsg('al','नमस्ते! मैं तुम्हारी Study Coach हूँ। रिमाइंडर, टू-डू, प्लान, फिजिक्स/अंतरिक्ष, क्विज़, लाइट/पंखा... कुछ भी पूछो।\nHi! I can also talk in English.');
+pollState();loadStatic();pollLog();
+setInterval(pollLog,1200);setInterval(pollState,2000);setInterval(pollDue,2000);
+if('speechSynthesis' in window)speechSynthesis.getVoices();
+</script>
+</body>
+</html>

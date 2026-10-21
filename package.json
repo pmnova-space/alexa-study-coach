@@ -1,0 +1,16 @@
+{
+  "name": "prakash-study-coach-mcp",
+  "version": "1.0.0",
+  "description": "Alexa+ study coach: a self-hosted MCP server (Streamable HTTP, spec 2025-11-25) plus an Agent Skill and a simulated Alexa+ web experience. Zero dependencies.",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["mcp", "alexa", "alexa-plus", "agent-skill", "streamable-http", "study-coach"],
+  "license": "MIT"
+}
